@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.4/vue.min.js" ></script>
+
+  <style>
+
+
+  </style>
+
+</head>
+
+<body>
+  <div id="container">
+      <div id="rail">
+      </div>
+  </div>
+  <script type="text/javascript">
+  new Vue({
+    el: "#container",
+    data: function() {
+      return {
+        csv: null,
+        selected: null,
+        search: "force",
+        settings: {
+          strokeColor: "#00ff00",
+          width: 960,
+          height: 960,
+          radius: 300
+        },
+        stations: ["大崎", "五反田", "目黒", "恵比寿", "渋谷", "原宿", "代々木", "新宿", "新大久保", "高田馬場", "目白",
+                  "池袋", "大塚", "巣鴨", "駒込", "田端", "西日暮里", "日暮里", "鶯谷", "上野", "御徒町", "秋葉原", "神田",
+                  "東京", "有楽町", "新橋", "浜松町", "田町", "品川"]
+      };
+    },
+    mounted: function() {
+      var that = this;
+      var svg = d3.select("body").append("svg")
+          .attr("width", this.settings.width)
+          .attr("height", this.settings.height);
+
+      var arc = d3.arc()
+          .outerRadius(this.settings.radius - 10)
+          .innerRadius(this.settings.radius - 70);
+
+      var pie = d3.pie()
+          .sort(null)
+          .value(function(d) { return 1; });
+
+      var g = svg.selectAll(".arc")
+            .data(pie(this.stations))
+          .enter().append("g")
+            .attr("class", "arc")
+            .attr("transform", "translate(" + this.settings.width/2 + "," + this.settings.height/2 + ")");;
+
+      g.append("path")
+          .attr("d", arc)
+          .style("fill", function(d) { return "#00ff00"; });
+
+      g.append("text")
+          .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+          .attr("dy", ".35em")
+          .text(function(d) { return d.data; });
+    },
+    methods: {
+    }
+  });
+  </script>
+</body>
+
+</html>
