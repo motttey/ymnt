@@ -4,6 +4,12 @@
   <meta charset="utf-8">
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.4/vue.min.js" ></script>
+  <!-- Required to convert named colors to RGB -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/canvg/1.4/rgbcolor.min.js"></script>
+  <!-- Optional if you want blur -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/stackblur-canvas/1.4.1/stackblur.min.js"></script>
+  <!-- Main canvg code -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/canvg/dist/browser/canvg.min.js"></script>
 
   <style>
 
@@ -16,17 +22,23 @@
 
 <body>
   <div id="container">
+      <button v-on:click="shareSvg">Save</button>
+      <button v-on:click="saveSvg"></button>
+      <a id="download" v-bind:href="result" download="ymnt.png">Download</a>
+
       <div id="rail">
       </div>
   </div>
   <script type="text/javascript">
-  new Vue({
+  var app = new Vue({
     el: "#container",
     data: function() {
       return {
         csv: null,
         selected: null,
         search: "force",
+        twUrl: "",
+        result: "",
         settings: {
           strokeColor: "#00ff00",
           width: 960,
@@ -68,6 +80,7 @@
     mounted: function() {
       var that = this;
       var svg = d3.select("body").append("svg")
+          .attr("id", "rails-svg")
           .attr("width", this.settings.width)
           .attr("height", this.settings.height);
 
@@ -101,6 +114,32 @@
           .text(function(d) { return d.data.name; });
     },
     methods: {
+      shareSvg: function(){
+        var svg = document.getElementById("rails-svg");
+        var svgStr = new XMLSerializer().serializeToString(svg);
+
+        var canvas = document.createElement("canvas");
+        if(!canvas){
+            var svgW = svg.getAttribute('width');
+            var svgH = svg.getAttribute('height');
+        }
+
+        canvg(canvas, svgStr, {
+            renderCallback: function(data){
+              var data = canvas.toDataURL('image/png');
+              console.log(data);
+              var url = encodeURIComponent(data);
+              var txt = "テスト";
+              this.twUrl = "https://twitter.com/intent/tweet?text=" + txt + '&hashtags=' + txt + '&url=' + url;
+              this.result = url;
+              app.$set(this, this.result, data);
+              console.log(data);
+            }
+        });
+      },
+      saveSvg: function(){
+
+      }
     }
   });
   </script>
