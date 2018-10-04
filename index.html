@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.4/vue.min.js" ></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <!-- Required to convert named colors to RGB -->
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/canvg/1.4/rgbcolor.min.js"></script>
   <!-- Optional if you want blur -->
@@ -22,12 +23,14 @@
 
 <body>
   <div id="container">
-      <button v-on:click="shareSvg">Save</button>
       <button v-on:click="saveSvg"></button>
+      <button @click="updateImage">Save</button>
+
       <a id="download" v-bind:href="result" download="ymnt.png">Download</a>
 
       <div id="rail">
       </div>
+      <img :src="image_src">
   </div>
   <script type="text/javascript">
   var app = new Vue({
@@ -38,6 +41,7 @@
         selected: null,
         search: "force",
         twUrl: "",
+        image_src: "",
         result: "",
         settings: {
           strokeColor: "#00ff00",
@@ -79,7 +83,7 @@
     },
     mounted: function() {
       var that = this;
-      var svg = d3.select("body").append("svg")
+      var svg = d3.select("#rail").append("svg")
           .attr("id", "rails-svg")
           .attr("width", this.settings.width)
           .attr("height", this.settings.height);
@@ -114,7 +118,7 @@
           .text(function(d) { return d.data.name; });
     },
     methods: {
-      shareSvg: function(){
+      updateImage: function(){
         var svg = document.getElementById("rails-svg");
         var svgStr = new XMLSerializer().serializeToString(svg);
 
@@ -132,13 +136,22 @@
               var txt = "テスト";
               this.twUrl = "https://twitter.com/intent/tweet?text=" + txt + '&hashtags=' + txt + '&url=' + url;
               this.result = url;
+              this.image_src = url;
+
+              app.$set(this, this.image_src, data);
               app.$set(this, this.result, data);
-              console.log(data);
+              console.log(this.image_src);
+
+              axios.get("https://upload.twitter.com/1.1/media/upload.json",
+                {
+                    'Content-Type': 'application/json;charset=UTF-8',
+                	  'Access-Control-Allow-Origin': '*',
+                })
+                .then(response => {this.results = response.data.results})
             }
         });
       },
       saveSvg: function(){
-
       }
     }
   });
