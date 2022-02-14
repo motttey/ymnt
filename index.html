@@ -82,9 +82,13 @@
           .attr("width", this.settings.width)
           .attr("height", this.settings.height);
 
+      const outerRadiusOffset = -50;
+      const innnerRadiusOffset = 50;
+      const textOffset = (innnerRadiusOffset - outerRadiusOffset) / 2
+
       var arc = d3.arc()
-          .outerRadius(this.settings.radius - 10)
-          .innerRadius(this.settings.radius - 70);
+          .outerRadius(this.settings.radius - outerRadiusOffset)
+          .innerRadius(this.settings.radius - innnerRadiusOffset);
 
       var pie = d3.pie()
           .sort(null)
@@ -94,23 +98,33 @@
             .data(pie(this.stations))
           .enter().append("g")
             .attr("class", "arc")
-            .attr("transform", "translate(" + this.settings.width/2 + "," + this.settings.height/2 + ")");
+            .attr("transform",
+              "translate("
+                + this.settings.width/2 + ","
+                + this.settings.height/2 +
+              ")"
+            );
 
       const vueThis = this;
 
       g.append("path")
-          .attr("d", arc)
-          .style("fill", function(d) { return "#dddddd"; })
-          .on("click", function(d){
-            d.enabled = (d.enabled)? false: true;
-            let col = (d.enabled)? "#00ff00" : "#dddddd"
-            d3.select(this).style("fill", col);
-          });
+        .attr("d", arc)
+        .style("fill", "#dddddd")
+        .on("click", function(d){
+          d.enabled = (d.enabled)? false: true;
+          let col = (d.enabled)? "#00ff00" : "#dddddd"
+          d3.select(this).style("fill", col);
+        });
+
 
       g.append("text")
-          .attr("transform", function(d) { return "translate(" + arc.centroid(d)+ ")"; })
+          .attr("transform", (d) =>  {
+            return "translate("
+              + (arc.centroid(d)[0] - textOffset/2) + ","
+              + arc.centroid(d)[1] +")";
+          })
           .attr("dy", ".0em")
-          .text(function(d) { return d.data.name; });
+          .text((d) => d.data.name);
     },
     methods: {
       updateImage: function(){
