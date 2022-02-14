@@ -23,14 +23,8 @@
 
 <body>
   <div id="container">
-      <button v-on:click="saveSvg"></button>
-      <button @click="updateImage">Save</button>
-
-      <a id="download" v-bind:href="result" download="ymnt.png">Download</a>
-
-      <div id="rail">
-      </div>
-      <img :src="image_src">
+      <button v-on:click="updateImage">Save</button>
+      <div id="rail" />
   </div>
   <script type="text/javascript">
   var app = new Vue({
@@ -100,13 +94,14 @@
             .data(pie(this.stations))
           .enter().append("g")
             .attr("class", "arc")
-            .attr("transform", "translate(" + this.settings.width/2 + "," + this.settings.height/2 + ")");;
+            .attr("transform", "translate(" + this.settings.width/2 + "," + this.settings.height/2 + ")");
+
+      const vueThis = this;
 
       g.append("path")
           .attr("d", arc)
           .style("fill", function(d) { return "#dddddd"; })
           .on("click", function(d){
-            console.log("clicked")
             d.enabled = (d.enabled)? false: true;
             let col = (d.enabled)? "#00ff00" : "#dddddd"
             d3.select(this).style("fill", col);
@@ -128,26 +123,54 @@
             var svgH = svg.getAttribute('height');
         }
 
+        canvas.width = svg.width.baseVal.value;
+        canvas.height = svg.height.baseVal.value;
+
+        console.log(svg);
+
+        var ctx = canvas.getContext("2d");
+        var image = new Image;
+        image.onload = function(){
+            ctx.drawImage(image, 0, 0);
+            var a = document.createElement("a");
+            a.href = canvas.toDataURL("image/png");
+            a.setAttribute("download", "image.png");
+            a.dispatchEvent(new MouseEvent("click"));
+        }
+        image.src = "data:image/svg+xml;charset=utf-8;base64,"
+          + btoa(unescape(encodeURIComponent(svgStr)));
+
         canvg(canvas, svgStr, {
             renderCallback: function(data){
               var data = canvas.toDataURL('image/png');
-              console.log(data);
               var url = encodeURIComponent(data);
               var txt = "テスト";
               this.twUrl = "https://twitter.com/intent/tweet?text=" + txt + '&hashtags=' + txt + '&url=' + url;
-              this.result = url;
-              this.image_src = url;
+              this.result = data.split(',')[1];
+              this.image_src = data.split(',')[1];
 
               app.$set(this, this.image_src, data);
               app.$set(this, this.result, data);
-              console.log(this.image_src);
 
-              axios.get("https://upload.twitter.com/1.1/media/upload.json",
-                {
-                    'Content-Type': 'application/json;charset=UTF-8',
-                	  'Access-Control-Allow-Origin': '*',
+              console.log(this.image_src);
+              console.log(this.result);
+
+              /*
+              return axios("https://upload.twitter.com/1.1/media/upload.json?media_data=" + this.image_src, {
+                   method: 'GET',
+                   mode: 'no-cors',
+                   headers: {
+                     'Access-Control-Allow-Origin': '*',
+                     'Content-Type': 'application/json',
+                   },
+                   withCredentials: true,
+                   credentials: 'same-origin',
+                 })
+                .then(response => {
+                  this.result = response.data.results
+                  console.log(this.result)
                 })
-                .then(response => {this.results = response.data.results})
+              */
             }
         });
       },
@@ -157,5 +180,4 @@
   });
   </script>
 </body>
-
 </html>
